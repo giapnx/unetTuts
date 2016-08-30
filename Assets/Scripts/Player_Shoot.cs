@@ -9,11 +9,6 @@ public class Player_Shoot : NetworkBehaviour {
 	[SerializeField] private Transform camTransform;
 	private RaycastHit hit;
 
-	// Use this for initialization
-	void Start () {
-	
-	}
-	
 	// Update is called once per frame
 	void Update () {
 		CheckIfShooting ();

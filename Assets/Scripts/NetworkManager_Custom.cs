@@ -16,8 +16,6 @@ public class NetworkManager_Custom : NetworkManager {
 
 	public void JoinGame()
 	{
-//		var ipList = Dns.GetHostAddresses (Dns.GetHostName ());
-		print (Network.player.ipAddress);
 		SetIPAddress ();
 		SetPort ();
 		NetworkManager.singleton.StartClient ();
@@ -41,7 +39,7 @@ public class NetworkManager_Custom : NetworkManager {
 		foreach (IPAddress ip in host.AddressList) {
 			print (ip.ToString ());
 			if (ip.AddressFamily == AddressFamily.InterNetwork) {
-				print ("Rip");
+				print (ip.ToString ());
 			}
 		}
 	}
@@ -61,7 +59,7 @@ public class NetworkManager_Custom : NetworkManager {
 
 	IEnumerator SetupMenuSceneButtons()
 	{
-		yield return new WaitForSeconds (0.03f);
+		yield return new WaitForSeconds (0.05f);
 		var startupHostBtn = GameObject.Find ("StartupHostBtn").GetComponent <Button>();
 		startupHostBtn.onClick.RemoveAllListeners ();
 		startupHostBtn.onClick.AddListener (StartupHost);
@@ -70,12 +68,16 @@ public class NetworkManager_Custom : NetworkManager {
 		joinGameBtn.onClick.RemoveAllListeners ();
 		joinGameBtn.onClick.AddListener (JoinGame);
 
+		var scanHostBtn = GameObject.Find ("ScanHost").GetComponent <Button>();
+		scanHostBtn.onClick.RemoveAllListeners ();
+		scanHostBtn.onClick.AddListener (ScanHost);
+
 	}
 
 	void SetupOtherSceneButtons()
 	{
 		var disconnectBtn = GameObject.Find ("DisconnectBtn").GetComponent <Button>();
 		disconnectBtn.onClick.RemoveAllListeners ();
-//		disconnectBtn.onClick.AddListener (NetworkManager.singleton.StopHost);
+		disconnectBtn.onClick.AddListener (NetworkManager.singleton.StopHost);
 	}
 }

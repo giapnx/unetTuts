@@ -207,6 +207,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
             float horizontal = CrossPlatformInputManager.GetAxis("Horizontal");
             float vertical = CrossPlatformInputManager.GetAxis("Vertical");
 
+			// Added for Unet toturial
+			float animSpeed = Mathf.Abs (vertical);
+			GetComponent <Animator>().SetFloat ("Speed", animSpeed);
+
             bool waswalking = m_IsWalking;
 
 #if !MOBILE_INPUT

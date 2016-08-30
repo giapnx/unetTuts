@@ -8,15 +8,10 @@ public class Player_Health : NetworkBehaviour {
 	[SyncVar (hook = "OnHealthChanged")] private int health = 100;
 	private Text healthText;
 
-	// Use this for initialization
-	void Start () {
+	public override void OnStartLocalPlayer ()
+	{
 		healthText = GameObject.Find ("HealthText").GetComponent <Text>();
 		SetHealthText ();
-	}
-	
-	// Update is called once per frame
-	void Update () {
-		
 	}
 
 	void SetHealthText()
