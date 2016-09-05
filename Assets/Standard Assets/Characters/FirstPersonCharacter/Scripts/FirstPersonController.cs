@@ -3,13 +3,18 @@ using UnityEngine;
 using UnityStandardAssets.CrossPlatformInput;
 using UnityStandardAssets.Utility;
 using Random = UnityEngine.Random;
+using UnityEngine.Networking;
 
 namespace UnityStandardAssets.Characters.FirstPerson
 {
     [RequireComponent(typeof (CharacterController))]
     [RequireComponent(typeof (AudioSource))]
-    public class FirstPersonController : MonoBehaviour
+	public class FirstPersonController : NetworkBehaviour
     {
+		[SyncVar] float syncHorizontal;
+		[SyncVar] float syncVertical;
+		[SyncVar] bool syncJump;
+
         [SerializeField] private bool m_IsWalking;
         [SerializeField] private float m_WalkSpeed;
         [SerializeField] private float m_RunSpeed;
@@ -66,6 +71,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             if (!m_Jump)
             {
                 m_Jump = CrossPlatformInputManager.GetButtonDown("Jump");
+				CmdTellServerJumpValue (m_Jump);
             }
 
             if (!m_PreviouslyGrounded && m_CharacterController.isGrounded)
@@ -96,6 +102,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         {
             float speed;
             GetInput(out speed);
+
             // always move along the camera forward as it is the direction that it being aimed at
             Vector3 desiredMove = transform.forward*m_Input.y + transform.right*m_Input.x;
 
@@ -113,13 +120,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             {
                 m_MoveDir.y = -m_StickToGroundForce;
 
-                if (m_Jump)
-                {
-                    m_MoveDir.y = m_JumpSpeed;
-                    PlayJumpSound();
-                    m_Jump = false;
-                    m_Jumping = true;
-                }
+				SyncJump ();
             }
             else
             {
@@ -203,40 +204,73 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         private void GetInput(out float speed)
         {
-            // Read input
+			// Read input 
             float horizontal = CrossPlatformInputManager.GetAxis("Horizontal");
             float vertical = CrossPlatformInputManager.GetAxis("Vertical");
 
+			CmdTellServerMyInputJoystick (horizontal, vertical);
+			SyncInput (out speed);
+
 			// Added for Unet toturial
-			float animSpeed = Mathf.Abs (vertical);
+			float animSpeed = Mathf.Abs (syncVertical);
 			GetComponent <Animator>().SetFloat ("Speed", animSpeed);
-
-            bool waswalking = m_IsWalking;
-
-#if !MOBILE_INPUT
-            // On standalone builds, walk/run speed is modified by a key press.
-            // keep track of whether or not the character is walking or running
-            m_IsWalking = !Input.GetKey(KeyCode.LeftShift);
-#endif
-            // set the desired speed to be walking or running
-            speed = m_IsWalking ? m_WalkSpeed : m_RunSpeed;
-            m_Input = new Vector2(horizontal, vertical);
-
-            // normalize input if it exceeds 1 in combined length:
-            if (m_Input.sqrMagnitude > 1)
-            {
-                m_Input.Normalize();
-            }
-
-            // handle speed change to give an fov kick
-            // only if the player is going to a run, is running and the fovkick is to be used
-            if (m_IsWalking != waswalking && m_UseFovKick && m_CharacterController.velocity.sqrMagnitude > 0)
-            {
-                StopAllCoroutines();
-                StartCoroutine(!m_IsWalking ? m_FovKick.FOVKickUp() : m_FovKick.FOVKickDown());
-            }
         }
 
+		[Client]
+		void SyncInput(out float speed)
+		{
+			bool waswalking = m_IsWalking;
+
+			#if !MOBILE_INPUT
+			// On standalone builds, walk/run speed is modified by a key press.
+			// keep track of whether or not the character is walking or running
+			m_IsWalking = !Input.GetKey(KeyCode.LeftShift);
+			#endif
+			// set the desired speed to be walking or running
+			speed = m_IsWalking ? m_WalkSpeed : m_RunSpeed;
+			m_Input = new Vector2(syncHorizontal, syncVertical);
+
+			// normalize input if it exceeds 1 in combined length:
+			if (m_Input.sqrMagnitude > 1)
+			{
+				m_Input.Normalize();
+			}
+
+			// handle speed change to give an fov kick
+			// only if the player is going to a run, is running and the fovkick is to be used
+			if (m_IsWalking != waswalking && m_UseFovKick && m_CharacterController.velocity.sqrMagnitude > 0)
+			{
+				StopAllCoroutines();
+				StartCoroutine(!m_IsWalking ? m_FovKick.FOVKickUp() : m_FovKick.FOVKickDown());
+			}
+		}
+
+		[Client]
+		void SyncJump()
+		{
+			if (syncJump)
+			{
+				m_MoveDir.y = m_JumpSpeed;
+				PlayJumpSound();
+				m_Jump = false;
+				CmdTellServerJumpValue (m_Jump);
+				m_Jumping = true;
+			}
+		}
+
+		// added for sync input joystick
+		[Command]
+		void CmdTellServerMyInputJoystick(float horizontal, float vertical)
+		{
+			syncHorizontal = horizontal;
+			syncVertical = vertical;
+		}
+
+		[Command]
+		void CmdTellServerJumpValue(bool jump)
+		{
+			syncJump = jump;
+		}
 
         private void RotateView()
         {

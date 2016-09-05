@@ -79,5 +79,8 @@ public class NetworkManager_Custom : NetworkManager {
 		var disconnectBtn = GameObject.Find ("DisconnectBtn").GetComponent <Button>();
 		disconnectBtn.onClick.RemoveAllListeners ();
 		disconnectBtn.onClick.AddListener (NetworkManager.singleton.StopHost);
+
+		var ipText = GameObject.Find ("ip address").GetComponent <Text> ();
+		ipText.text = "ip: " + NetworkManager.singleton.networkAddress;
 	}
 }
