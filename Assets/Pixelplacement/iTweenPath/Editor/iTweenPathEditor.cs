@@ -35,13 +35,14 @@ public class iTweenPathEditor : Editor
 		style.fontStyle = FontStyle.Bold;
 		style.normal.textColor = Color.white;
 		_target = (iTweenPath)target;
-		
-		//lock in a default path name:
-		if(!_target.initialized){
-			_target.initialized = true;
-			_target.pathName = "New Path " + ++count;
-			_target.initialName = _target.pathName;
-		}
+
+        //lock in a default path name:
+        if (!_target.initialized)
+        {
+            _target.initialized = true;
+            _target.pathName = "New Path " + ++count;
+            _target.initialName = _target.pathName;
+        }
 	}
 	
 	public override void OnInspectorGUI(){		
