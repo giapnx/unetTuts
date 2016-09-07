@@ -73,26 +73,29 @@ namespace UnityStandardAssets.Characters.FirstPerson
 //            RotateView();
 //			SyncRotatonPlayerVsCamera ();
             // the jump state needs to read here to make sure it is not missed
-            if (!m_Jump)
+			if (!m_Jump && isServer)
             {
                 m_Jump = CrossPlatformInputManager.GetButtonDown("Jump");
-				if(isServer)
-					CmdTellServerJumpValue (m_Jump);
+				CmdTellServerJumpValue (m_Jump);
             }
 
-            if (!m_PreviouslyGrounded && m_CharacterController.isGrounded)
-            {
-                StartCoroutine(m_JumpBob.DoBobCycle());
-                PlayLandingSound();
-                m_MoveDir.y = 0f;
-                m_Jumping = false;
-            }
-            if (!m_CharacterController.isGrounded && !m_Jumping && m_PreviouslyGrounded)
-            {
-                m_MoveDir.y = 0f;
-            }
+			if(!isServer)
+			{
+				if (!m_PreviouslyGrounded && m_CharacterController.isGrounded)
+				{
+					StartCoroutine(m_JumpBob.DoBobCycle());
+					PlayLandingSound();
+					m_MoveDir.y = 0f;
+					m_Jumping = false;
+				}
 
-            m_PreviouslyGrounded = m_CharacterController.isGrounded;
+				if (!m_CharacterController.isGrounded && !m_Jumping && m_PreviouslyGrounded)
+				{
+					m_MoveDir.y = 0f;
+				}
+
+				m_PreviouslyGrounded = m_CharacterController.isGrounded;
+			}
         }
 
 		void SyncRotatonPlayerVsCamera()
@@ -115,35 +118,38 @@ namespace UnityStandardAssets.Characters.FirstPerson
             GetInput(out speed);
 
             // always move along the camera forward as it is the direction that it being aimed at
-//			Vector3 desiredMove = transform.forward*m_Input.y + transform.right*m_Input.x;
-			Vector3 desiredMove = m_Camera.transform.forward*m_Input.y + m_Camera.transform.right*m_Input.x;
+//			Vector3 desiredMove = transform.forward*m_Input.y + transform.right*m_Input.x; // changed for sync player rotation
+			if(!isServer)
+			{
+				Vector3 desiredMove = m_Camera.transform.forward*m_Input.y + m_Camera.transform.right*m_Input.x;
 
-            // get a normal for the surface that is being touched to move along it
-            RaycastHit hitInfo;
-            Physics.SphereCast(transform.position, m_CharacterController.radius, Vector3.down, out hitInfo,
-                               m_CharacterController.height/2f, Physics.AllLayers, QueryTriggerInteraction.Ignore);
-            desiredMove = Vector3.ProjectOnPlane(desiredMove, hitInfo.normal).normalized;
+				// get a normal for the surface that is being touched to move along it
+				RaycastHit hitInfo;
+				Physics.SphereCast(transform.position, m_CharacterController.radius, Vector3.down, out hitInfo,
+					m_CharacterController.height/2f, Physics.AllLayers, QueryTriggerInteraction.Ignore);
+				desiredMove = Vector3.ProjectOnPlane(desiredMove, hitInfo.normal).normalized;
 
-            m_MoveDir.x = desiredMove.x*speed;
-            m_MoveDir.z = desiredMove.z*speed;
+				m_MoveDir.x = desiredMove.x*speed;
+				m_MoveDir.z = desiredMove.z*speed;
 
 
-            if (m_CharacterController.isGrounded)
-            {
-                m_MoveDir.y = -m_StickToGroundForce;
+				if (m_CharacterController.isGrounded)
+				{
+					m_MoveDir.y = -m_StickToGroundForce;
 
-				SyncJump ();
-            }
-            else
-            {
-                m_MoveDir += Physics.gravity*m_GravityMultiplier*Time.fixedDeltaTime;
-            }
-            m_CollisionFlags = m_CharacterController.Move(m_MoveDir*Time.fixedDeltaTime);
+					SyncJump ();
+				}
+				else
+				{
+					m_MoveDir += Physics.gravity*m_GravityMultiplier*Time.fixedDeltaTime;
+				}
+				m_CollisionFlags = m_CharacterController.Move(m_MoveDir*Time.fixedDeltaTime);
 
-            ProgressStepCycle(speed);
-            UpdateCameraPosition(speed);
+				ProgressStepCycle(speed);
+				UpdateCameraPosition(speed);
+			}
 
-            m_MouseLook.UpdateCursorLock();
+//            m_MouseLook.UpdateCursorLock();
         }
 
 
@@ -222,16 +228,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			if(isServer)
 				CmdTellServerMyInputJoystick (horizontal, vertical);
+
 			SyncInput (out speed);
 
 			// Added for Unet toturial
-			float animSpeed = Mathf.Abs (syncVertical);
-			GetComponent <Animator>().SetFloat ("Speed", animSpeed);
+//			float animSpeed = Mathf.Abs (syncVertical);
+//			GetComponent <Animator>().SetFloat ("Speed", animSpeed);
         }
 
 		[Client]
 		void SyncInput(out float speed)
 		{
+			
 			bool waswalking = m_IsWalking;
 
 			#if !MOBILE_INPUT
@@ -241,21 +249,26 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			#endif
 			// set the desired speed to be walking or running
 			speed = m_IsWalking ? m_WalkSpeed : m_RunSpeed;
-			m_Input = new Vector2(syncHorizontal, syncVertical);
 
-			// normalize input if it exceeds 1 in combined length:
-			if (m_Input.sqrMagnitude > 1)
+			if(!isServer)
 			{
-				m_Input.Normalize();
+				m_Input = new Vector2(syncHorizontal, syncVertical);
+
+				// normalize input if it exceeds 1 in combined length:
+				if (m_Input.sqrMagnitude > 1)
+				{
+					m_Input.Normalize();
+				}
+
+				// handle speed change to give an fov kick
+				// only if the player is going to a run, is running and the fovkick is to be used
+				if (m_IsWalking != waswalking && m_UseFovKick && m_CharacterController.velocity.sqrMagnitude > 0)
+				{
+					StopAllCoroutines();
+					StartCoroutine(!m_IsWalking ? m_FovKick.FOVKickUp() : m_FovKick.FOVKickDown());
+				}
 			}
 
-			// handle speed change to give an fov kick
-			// only if the player is going to a run, is running and the fovkick is to be used
-			if (m_IsWalking != waswalking && m_UseFovKick && m_CharacterController.velocity.sqrMagnitude > 0)
-			{
-				StopAllCoroutines();
-				StartCoroutine(!m_IsWalking ? m_FovKick.FOVKickUp() : m_FovKick.FOVKickDown());
-			}
 		}
 
 		[Client]
