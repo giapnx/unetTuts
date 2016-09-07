@@ -55,12 +55,12 @@ public class NetworkManager_Custom : NetworkManager {
 		SetPort ();
 		NetworkManager.singleton.StartHost ();
 
-		sender = new UdpClient (NetworkManager.singleton.networkPort, AddressFamily.InterNetwork);
-		IPEndPoint groupEP = new IPEndPoint (IPAddress.Broadcast, remotePort);
-		sender.Connect (groupEP);
-
-		//SendData ();
-		InvokeRepeating("SendData",0,5f);
+//		sender = new UdpClient (NetworkManager.singleton.networkPort, AddressFamily.InterNetwork);
+//		IPEndPoint groupEP = new IPEndPoint (IPAddress.Broadcast, remotePort);
+//		sender.Connect (groupEP);
+//
+//		//SendData ();
+//		InvokeRepeating("SendData",0,5f);
 	}
 
 	public void JoinGame()
@@ -83,7 +83,7 @@ public class NetworkManager_Custom : NetworkManager {
 
 	public void ScanHost()
 	{
-		StartReceivingIP ();
+//		StartReceivingIP ();
 
 		IPAddress[] host = Dns.GetHostAddresses("");
 
