@@ -73,13 +73,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
 //            RotateView();
 //			SyncRotatonPlayerVsCamera ();
             // the jump state needs to read here to make sure it is not missed
-			if (!m_Jump && isServer)
+			if (!m_Jump)
             {
                 m_Jump = CrossPlatformInputManager.GetButtonDown("Jump");
-				CmdTellServerJumpValue (m_Jump);
+				if(isServer)
+					CmdTellServerJumpValue (m_Jump);
             }
 
-			if(!isServer)
+			if(true) //!isServer
 			{
 				if (!m_PreviouslyGrounded && m_CharacterController.isGrounded)
 				{
@@ -119,7 +120,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             // always move along the camera forward as it is the direction that it being aimed at
 //			Vector3 desiredMove = transform.forward*m_Input.y + transform.right*m_Input.x; // changed for sync player rotation
-			if(!isServer)
+			if(true) // !isServer
 			{
 				Vector3 desiredMove = m_Camera.transform.forward*m_Input.y + m_Camera.transform.right*m_Input.x;
 
@@ -149,7 +150,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				UpdateCameraPosition(speed);
 			}
 
-//            m_MouseLook.UpdateCursorLock();
+            m_MouseLook.UpdateCursorLock();
         }
 
 
@@ -250,7 +251,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			// set the desired speed to be walking or running
 			speed = m_IsWalking ? m_WalkSpeed : m_RunSpeed;
 
-			if(!isServer)
+			if(true)
 			{
 				m_Input = new Vector2(syncHorizontal, syncVertical);
 

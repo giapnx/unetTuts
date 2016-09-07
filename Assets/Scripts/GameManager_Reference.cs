@@ -9,9 +9,9 @@ public class GameManager_Reference : NetworkBehaviour {
 	[SerializeField] GameObject joystick;
 	[SerializeField] Camera mainCamera;
 
-	[SerializeField] GameObject gvrRef;
-	[SerializeField] GameObject mapRef;
-	[SerializeField] GameObject backgroundRef;
+//	[SerializeField] GameObject gvrRef;
+//	[SerializeField] GameObject mapRef;
+//	[SerializeField] GameObject backgroundRef;
 
 	const string BODY = "MAX";
 
@@ -37,12 +37,12 @@ public class GameManager_Reference : NetworkBehaviour {
 		else
 		{
 			// display screen only control
-			backgroundRef.SetActive (true);
-			gvrRef.SetActive (false);
-//			mapRef.SetActive (false);
-			var bodyRef = GameObject.Find (BODY);
-			bodyRef.SetActive (false);
-			mainCamera.transform.gameObject.SetActive (false);
+//			backgroundRef.SetActive (true);
+////			gvrRef.SetActive (false);
+////			mapRef.SetActive (false);
+//			var bodyRef = GameObject.Find (BODY);
+//			bodyRef.SetActive (false);
+//			mainCamera.transform.gameObject.SetActive (false);
 		}
 	}
 }
