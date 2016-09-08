@@ -81,19 +81,19 @@ public class NetworkManager_Custom : NetworkManager {
 		NetworkManager.singleton.networkPort = 7777;
 	}
 
-	public void ScanHost()
-	{
+//	public void ScanHost()
+//	{
 //		StartReceivingIP ();
 
-		IPAddress[] host = Dns.GetHostAddresses("");
-
-		foreach (IPAddress ip in host) {
-			print (ip.ToString ());
-			if (ip.AddressFamily == AddressFamily.InterNetwork) {
-				print (ip.ToString ());
-			}
-		}
-	}
+//		IPAddress[] host = Dns.GetHostAddresses("");
+//
+//		foreach (IPAddress ip in host) {
+//			print (ip.ToString ());
+//			if (ip.AddressFamily == AddressFamily.InterNetwork) {
+//				print (ip.ToString ());
+//			}
+//		}
+//	}
 
 	void OnLevelWasLoaded(int level)
 	{
@@ -119,9 +119,9 @@ public class NetworkManager_Custom : NetworkManager {
 		joinGameBtn.onClick.RemoveAllListeners ();
 		joinGameBtn.onClick.AddListener (JoinGame);
 
-		var scanHostBtn = GameObject.Find ("ScanHost").GetComponent <Button>();
-		scanHostBtn.onClick.RemoveAllListeners ();
-		scanHostBtn.onClick.AddListener (ScanHost);
+//		var scanHostBtn = GameObject.Find ("ScanHost").GetComponent <Button>();
+//		scanHostBtn.onClick.RemoveAllListeners ();
+//		scanHostBtn.onClick.AddListener (ScanHost);
 
 	}
 
